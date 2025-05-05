@@ -6,10 +6,8 @@ from sklearn.linear_model import LogisticRegression
 from sklearn.preprocessing import StandardScaler
 from sklearn.pipeline import make_pipeline
 
-# Завантаження даних
 df = pd.read_csv('internship_candidates_cefr_final.csv')
 
-# Перетворення рівня англійської у числові значення
 english_map = {
     'Elementary': 1,
     'Pre-Intermediate': 2,
@@ -20,44 +18,58 @@ english_map = {
 }
 df['EnglishLevelNum'] = df['EnglishLevel'].map(english_map)
 
-# Вибір ознак і цільової змінної
 X = df[["Experience", "Grade", "EnglishLevelNum", "Age", "EntryTestScore"]]
 y = df["Accepted"]
 
-# Розбиття на тренувальну та тестову вибірки
 X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
 
-# Створення пайплайну з масштабуванням і логістичною регресією
-model = make_pipeline(
-    StandardScaler(),
-    LogisticRegression(max_iter=1000)
-)
-
-# Навчання моделі
+model = LogisticRegression()
 model.fit(X_train, y_train)
 
-# Прогноз на тестовій вибірці
 y_pred = model.predict(X_test)
 
-# Побудова графіка ймовірності прийняття залежно від EntryTestScore
-score_range = np.linspace(300, 1000, 100)
+import matplotlib.pyplot as plt
 
-# Тестовий DataFrame для графіку
-plot_df = pd.DataFrame({
-    'Experience': [3]*len(score_range),
-    'Grade': [9.0]*len(score_range),
-    'EnglishLevelNum': [3]*len(score_range),
-    'Age': [23]*len(score_range),
-    'EntryTestScore': score_range
+plt.scatter(X_test["Experience"], X_test["Grade"], c=y_pred, cmap='coolwarm', edgecolor='k', s=100)
+plt.title("Logistic Regression Predictions")
+plt.xlabel("Experience")
+plt.ylabel("Grade")
+plt.colorbar(label='Predicted Class')
+plt.show()
+
+plt.scatter(X_test["Experience"], X_test["EnglishLevelNum"], c=y_pred, cmap='coolwarm', edgecolor='k', s=100)
+plt.title("Logistic Regression Predictions")
+plt.xlabel("Experience")
+plt.ylabel("English Level")
+plt.colorbar(label='Predicted Class')
+plt.show()
+
+plt.scatter(X_test["Experience"], X_test["Age"], c=y_pred, cmap='coolwarm', edgecolor='k', s=100)
+plt.title("Logistic Regression Predictions")
+plt.xlabel("Experience")
+plt.ylabel("Age")
+plt.colorbar(label='Predicted Class')
+plt.show()
+
+plt.scatter(X_test["Experience"], X_test["EntryTestScore"], c=y_pred, cmap='coolwarm', edgecolor='k', s=100)
+plt.title("Logistic Regression Predictions")
+plt.xlabel("Experience")
+plt.ylabel("Entry Test Score")
+plt.colorbar(label='Predicted Class')
+plt.show()
+
+new_data = pd.DataFrame({
+    "Experience": [5, 3, 2],
+    "Grade": [85, 78, 90],
+    "EnglishLevel": [8, 7, 9],
+    "Age": [25, 30, 22],
+    "EntryTestScore": [80, 75, 88]
 })
 
-# Прогноз імовірностей
-probs = model.predict_proba(plot_df)[:, 1]
+predictions = model.predict(new_data)
+print("Predictions for new data:", predictions)
 
-# Побудова графіка
-plt.plot(score_range, probs)
-plt.xlabel('Entry Test Score')
-plt.ylabel('Probability of Acceptance')
-plt.title('Acceptance Probability vs Entry Test Score')
-plt.grid(True)
-plt.show()
+print("Accuracy:", accuracy_score(y_test, y_pred))
+print("Precision:", precision_score(y_test, y_pred))
+print("Recall:", recall_score(y_test, y_pred))
+print("Confusion Matrix:\n", confusion_matrix(y_test, y_pred))
